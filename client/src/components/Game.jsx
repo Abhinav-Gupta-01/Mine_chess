@@ -110,6 +110,9 @@ export default function Game({ username }) {
   // Socket listeners
   useEffect(() => {
     function onYourState(state) {
+      if (state.status === 'playing' || state.status === 'mine_placement') {
+        sounds.stopAll();
+      }
       setGameState(state);
       setConnecting(false);
     }
@@ -178,6 +181,7 @@ export default function Game({ username }) {
     }
 
     function onRematchStarted() {
+      sounds.stopAll();
       setRematchRequested(false);
       setMyRematchSent(false);
       setDrawOffer(null);
@@ -193,6 +197,7 @@ export default function Game({ username }) {
     }
 
     function onGameStarted() {
+      sounds.stopAll();
       sounds.notify();
     }
 
@@ -217,6 +222,7 @@ export default function Game({ username }) {
     socket.on('opponent_mines_placed', onOpponentMinesPlaced);
 
     return () => {
+      sounds.stopAll();
       socket.off('your_state', onYourState);
       socket.off('move_made', onMoveMade);
       socket.off('clock_update', onClockUpdate);

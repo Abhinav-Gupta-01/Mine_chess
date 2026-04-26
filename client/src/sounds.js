@@ -44,7 +44,26 @@ function playNoise(duration, volume = 0.2) {
 let lastWinFile = '';
 let lastLoseFile = '';
 
+const activeAudios = new Set();
+
+function playAudioFile(file) {
+  const audio = new Audio(file);
+  activeAudios.add(audio);
+  audio.addEventListener('ended', () => activeAudios.delete(audio));
+  audio.play().catch(e => {
+    console.log('Audio error:', e);
+    activeAudios.delete(audio);
+  });
+}
+
 export const sounds = {
+  stopAll() {
+    activeAudios.forEach(audio => {
+      audio.pause();
+      audio.currentTime = 0;
+    });
+    activeAudios.clear();
+  },
   move() {
     playTone(600, 0.08, 'sine', 0.12);
     setTimeout(() => playTone(800, 0.05, 'sine', 0.08), 30);
@@ -54,7 +73,7 @@ export const sounds = {
     setTimeout(() => playTone(200, 0.1, 'square', 0.1), 50);
   },
   check() {
-    new Audio('/sounds/check.mp3').play().catch(e => console.log('Audio error:', e));
+    playAudioFile('/sounds/check.mp3');
   },
   explosion() {
     playNoise(0.8, 0.35);
@@ -67,7 +86,7 @@ export const sounds = {
     setTimeout(() => playTone(784, 0.3, 'sine', 0.15), 300);
   },
   captureQueen() {
-    new Audio('/sounds/queen.mp3').play().catch(e => console.log('Audio error:', e));
+    playAudioFile('/sounds/queen.mp3');
   },
   win() {
     const winFiles = ['/sounds/won.mp3', '/sounds/won2.mp3'];
@@ -77,7 +96,7 @@ export const sounds = {
     } while (randomFile === lastWinFile && winFiles.length > 1);
     
     lastWinFile = randomFile;
-    new Audio(randomFile).play().catch(e => console.log('Audio error:', e));
+    playAudioFile(randomFile);
   },
   lose() {
     const loseFiles = ['/sounds/lost.mp3', '/sounds/lost2.mp3', '/sounds/lost3.mp3'];
@@ -87,11 +106,10 @@ export const sounds = {
     } while (randomFile === lastLoseFile && loseFiles.length > 1);
     
     lastLoseFile = randomFile;
-    const audio = new Audio(randomFile);
-    audio.play().catch(e => console.log('Audio error:', e));
+    playAudioFile(randomFile);
   },
   draw() {
-    new Audio('/sounds/draw.mp3').play().catch(e => console.log('Audio error:', e));
+    playAudioFile('/sounds/draw.mp3');
   },
   notify() {
     playTone(440, 0.1, 'sine', 0.1);
