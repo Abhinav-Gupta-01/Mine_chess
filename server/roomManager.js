@@ -219,7 +219,12 @@ class Room {
 
     // Check game end conditions
     let gameOver = null;
-    if (this.chess.isCheckmate()) {
+    if (mineExploded && move.piece === 'k') {
+      gameOver = {
+        reason: 'king_exploded',
+        winner: move.color === 'w' ? 'b' : 'w',
+      };
+    } else if (this.chess.isCheckmate()) {
       gameOver = {
         reason: 'checkmate',
         winner: this.chess.turn() === 'w' ? 'b' : 'w',

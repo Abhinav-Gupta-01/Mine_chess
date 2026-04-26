@@ -10,6 +10,7 @@ const REASON_TEXT = {
   insufficient_material: 'Insufficient Material',
   draw: 'Draw',
   abandonment: 'Abandonment',
+  king_exploded: 'King Exploded',
 };
 
 export default function GameOverModal({
