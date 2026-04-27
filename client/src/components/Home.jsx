@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import socket from '../socket';
+import socket, { playerId } from '../socket';
 import CreateMatchModal from './CreateMatchModal';
 
 export default function Home({ username }) {
@@ -42,7 +42,7 @@ export default function Home({ username }) {
   }
 
   function handleCreateMatch(settings) {
-    socket.emit('create_room', { username, settings }, (response) => {
+    socket.emit('create_room', { username, playerId, settings }, (response) => {
       if (response.error) {
         setError(response.error);
         return;
@@ -69,7 +69,7 @@ export default function Home({ username }) {
 
   function joinRoom(code) {
     setError('');
-    socket.emit('join_room', { code, username }, (response) => {
+    socket.emit('join_room', { code, username, playerId }, (response) => {
       if (response.error) {
         setError(response.error);
         return;

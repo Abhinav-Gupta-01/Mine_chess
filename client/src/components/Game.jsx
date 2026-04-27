@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import socket from '../socket';
+import socket, { playerId } from '../socket';
 import sounds from '../sounds';
 import Chessboard from './Chessboard';
 import MinePlacement from './MinePlacement';
@@ -85,13 +85,13 @@ export default function Game({ username }) {
     }
 
     // Try joining first
-    socket.emit('join_room', { code: code.toUpperCase(), username }, (response) => {
+    socket.emit('join_room', { code: code.toUpperCase(), username, playerId }, (response) => {
       if (response.error) {
         // Maybe already in the room or game started, try reconnect
-        socket.emit('reconnect_room', { code: code.toUpperCase(), username }, (reconResp) => {
+        socket.emit('reconnect_room', { code: code.toUpperCase(), username, playerId }, (reconResp) => {
           if (reconResp.error) {
             // Try spectating
-            socket.emit('spectate_room', { code: code.toUpperCase(), username }, (specResp) => {
+            socket.emit('spectate_room', { code: code.toUpperCase(), username, playerId }, (specResp) => {
               if (specResp.error) {
                 setError(specResp.error);
               }

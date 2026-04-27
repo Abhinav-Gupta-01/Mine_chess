@@ -5,8 +5,8 @@ function setupSocketHandlers(io, roomManager) {
     console.log(`Client connected: ${socket.id}`);
 
     // ---- Create Room ----
-    socket.on('create_room', ({ username, settings }, callback) => {
-      const room = roomManager.createRoom(socket.id, username, settings);
+    socket.on('create_room', ({ username, playerId, settings }, callback) => {
+      const room = roomManager.createRoom(socket.id, username, playerId, settings);
       socket.join(room.code);
       
       if (room.isBotGame) {
@@ -35,8 +35,8 @@ function setupSocketHandlers(io, roomManager) {
     });
 
     // ---- Join Room ----
-    socket.on('join_room', ({ code, username }, callback) => {
-      const result = roomManager.joinRoom(code, socket.id, username);
+    socket.on('join_room', ({ code, username, playerId }, callback) => {
+      const result = roomManager.joinRoom(code, socket.id, username, playerId);
       if (result.error) {
         return callback({ error: result.error });
       }
@@ -81,8 +81,8 @@ function setupSocketHandlers(io, roomManager) {
     });
 
     // ---- Reconnect ----
-    socket.on('reconnect_room', ({ code, username }, callback) => {
-      const result = roomManager.handleReconnect(socket.id, code, username);
+    socket.on('reconnect_room', ({ code, username, playerId }, callback) => {
+      const result = roomManager.handleReconnect(socket.id, code, username, playerId);
       if (result.error) {
         return callback({ error: result.error });
       }

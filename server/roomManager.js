@@ -18,6 +18,7 @@ class Room {
     this.host = {
       socketId: hostSocket,
       username: hostUsername,
+      userId: settings.playerId, // Persistent ID
       color: null,
       connected: true,
       disconnectedAt: null,
@@ -70,12 +71,13 @@ class Room {
     }
   }
 
-  addGuest(socketId, username) {
-    const guestColor = this.host.color === 'w' ? 'b' : 'w';
+  addGuest(socketId, username, userId = null) {
+    const color = this.host.color === 'w' ? 'b' : 'w';
     this.guest = {
       socketId,
       username,
-      color: guestColor,
+      userId, // Persistent ID
+      color,
       connected: true,
       disconnectedAt: null,
     };
@@ -494,13 +496,13 @@ class RoomManager {
     this.socketToRoom = new Map();
   }
 
-  createRoom(socketId, username, settings) {
+  createRoom(socketId, username, playerId, settings) {
     let code;
     do {
       code = generateCode();
     } while (this.rooms.has(code));
 
-    const room = new Room(code, socketId, username, settings);
+    const room = new Room(code, socketId, username, { ...settings, playerId });
     this.rooms.set(code, room);
     this.socketToRoom.set(socketId, code);
 
@@ -516,14 +518,31 @@ class RoomManager {
     return this.rooms.get(code?.toUpperCase());
   }
 
-  joinRoom(code, socketId, username) {
+  joinRoom(code, socketId, username, userId) {
     const room = this.getRoom(code);
     if (!room) return { error: 'Room not found' };
+
+    // Check if it's a returning player (refresh)
+    if (room.host.userId === userId) {
+      this.socketToRoom.delete(room.host.socketId);
+      room.host.socketId = socketId;
+      room.host.connected = true;
+      this.socketToRoom.set(socketId, room.code);
+      return { room, reconnected: true };
+    }
+    if (room.guest && room.guest.userId === userId) {
+      this.socketToRoom.delete(room.guest.socketId);
+      room.guest.socketId = socketId;
+      room.guest.connected = true;
+      this.socketToRoom.set(socketId, room.code);
+      return { room, reconnected: true };
+    }
+
     if (room.status !== 'waiting') return { error: 'Game already started' };
     if (room.guest) return { error: 'Room is full' };
     if (room.host.socketId === socketId) return { error: 'Cannot join your own room' };
 
-    room.addGuest(socketId, username);
+    room.addGuest(socketId, username, userId);
     this.socketToRoom.set(socketId, room.code);
     return { room };
   }
@@ -570,15 +589,15 @@ class RoomManager {
     return null;
   }
 
-  handleReconnect(socketId, code, username) {
+  handleReconnect(socketId, code, username, userId) {
     const room = this.getRoom(code);
     if (!room) return { error: 'Room not found' };
 
-    // Find the disconnected player by username
+    // Find the disconnected player by userId or username
     let player = null;
-    if (room.host && room.host.username === username && !room.host.connected) {
+    if (room.host && (room.host.userId === userId || room.host.username === username)) {
       player = room.host;
-    } else if (room.guest && room.guest.username === username && !room.guest.connected) {
+    } else if (room.guest && (room.guest.userId === userId || room.guest.username === username)) {
       player = room.guest;
     }
 
