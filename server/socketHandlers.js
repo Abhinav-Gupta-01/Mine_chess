@@ -8,6 +8,29 @@ function setupSocketHandlers(io, roomManager) {
     socket.on('create_room', ({ username, settings }, callback) => {
       const room = roomManager.createRoom(socket.id, username, settings);
       socket.join(room.code);
+      
+      if (room.isBotGame) {
+        // Set up bot move listener
+        room.onBotMove = (move) => {
+          handleMoveInternal(io, room, 'BOT_SOCKET_ID', move.from, move.to, move.promotion);
+        };
+
+        // Notify the host immediately since bot joined during room creation
+        setTimeout(() => {
+          socket.emit('opponent_joined', {
+            username: room.guest.username,
+            color: room.guest.color,
+          });
+          socket.emit('your_state', room.getState(socket.id));
+          socket.emit('game_state', room.getState(null));
+          
+          if (room.status === 'playing') {
+            socket.emit('game_started');
+            startClockBroadcast(io, room);
+          }
+        }, 100);
+      }
+
       callback({ code: room.code, color: room.host.color });
     });
 
@@ -108,10 +131,15 @@ function setupSocketHandlers(io, roomManager) {
       const room = roomManager.getRoom(code);
       if (!room) return callback({ error: 'Room not found' });
 
-      const result = room.makeMove(socket.id, from, to, promotion);
+      const result = handleMoveInternal(io, room, socket.id, from, to, promotion);
       if (result.error) return callback({ error: result.error });
 
       callback({ success: true });
+    });
+
+    function handleMoveInternal(io, room, socketId, from, to, promotion) {
+      const result = room.makeMove(socketId, from, to, promotion);
+      if (result.error) return result;
 
       // Broadcast to all in room
       io.to(room.code).emit('move_made', {
@@ -125,17 +153,19 @@ function setupSocketHandlers(io, roomManager) {
       });
 
       // Send updated personal states (for mine visibility)
-      if (room.host) {
+      if (room.host && room.host.connected) {
         io.to(room.host.socketId).emit('your_state', room.getState(room.host.socketId));
       }
-      if (room.guest) {
+      if (room.guest && room.guest.connected && room.guest.socketId !== 'BOT_SOCKET_ID') {
         io.to(room.guest.socketId).emit('your_state', room.getState(room.guest.socketId));
       }
 
       if (result.gameOver) {
         io.to(room.code).emit('game_over', result.gameOver);
       }
-    });
+
+      return result;
+    }
 
     // ---- Draw Offer ----
     socket.on('offer_draw', ({ code }, callback) => {

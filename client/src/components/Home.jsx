@@ -47,7 +47,12 @@ export default function Home({ username }) {
         setError(response.error);
         return;
       }
-      setWaitingRoom(response.code);
+      
+      if (settings.opponentType === 'bot') {
+        navigate(`/game/${response.code}`);
+      } else {
+        setWaitingRoom(response.code);
+      }
       setShowCreateModal(false);
     });
   }

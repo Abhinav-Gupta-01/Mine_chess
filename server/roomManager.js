@@ -1,4 +1,5 @@
 const { Chess } = require('chess.js');
+const ChessAI = require('./ai');
 
 function generateCode() {
   const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
@@ -49,6 +50,11 @@ class Room {
 
     this.createdAt = Date.now();
 
+    // Bot properties
+    this.isBotGame = settings.opponentType === 'bot';
+    this.botDifficulty = parseInt(settings.difficulty) || 1;
+    this.ai = this.isBotGame ? new ChessAI(this.botDifficulty, settings.gameMode === 'landmine') : null;
+
     // Assign colors
     this._assignColors();
   }
@@ -79,6 +85,38 @@ class Room {
     } else {
       this.status = 'playing';
       this.startClock();
+    }
+
+    // If it's a bot game, the bot might need to place mines or move
+    if (this.isBotGame) {
+      this._checkBotTurn();
+    }
+  }
+
+  _checkBotTurn() {
+    if (this.status === 'mine_placement' && !this.minesPlaced[this.guest.color]) {
+      // Bot places mines automatically
+      setTimeout(() => {
+        const botMines = ChessAI.getRandomMines(this.guest.color);
+        this.placeMines('BOT_SOCKET_ID', botMines);
+      }, 1000);
+    } else if (this.status === 'playing' && this.chess.turn() === this.guest.color) {
+      // Bot makes a move after a "thinking" delay
+      const delay = Math.max(500, Math.min(2000, 500 + Math.random() * 1500));
+      setTimeout(async () => {
+        if (this.status !== 'playing' || this.chess.turn() !== this.guest.color) return;
+        
+        const move = await this.ai.getBestMove(this.chess, this.mines);
+        if (move) {
+          this._botRequestMove(move);
+        }
+      }, delay);
+    }
+  }
+
+  _botRequestMove(move) {
+    if (this.onBotMove) {
+      this.onBotMove(move);
     }
   }
 
@@ -164,9 +202,11 @@ class Room {
     if (this.minesPlaced.w && this.minesPlaced.b) {
       this.status = 'playing';
       this.startClock();
+      if (this.isBotGame) this._checkBotTurn();
       return { started: true };
     }
 
+    if (this.isBotGame) this._checkBotTurn();
     return { waiting: true };
   }
 
@@ -240,6 +280,8 @@ class Room {
 
     if (gameOver) {
       this.endGame(gameOver.reason, gameOver.winner);
+    } else if (this.isBotGame) {
+      this._checkBotTurn();
     }
 
     return {
@@ -440,6 +482,9 @@ class Room {
 
   cleanup() {
     this.pauseClocks();
+    if (this.ai) {
+      this.ai.cleanup();
+    }
   }
 }
 
@@ -458,6 +503,12 @@ class RoomManager {
     const room = new Room(code, socketId, username, settings);
     this.rooms.set(code, room);
     this.socketToRoom.set(socketId, code);
+
+    // If it's a bot game, add the guest immediately
+    if (room.isBotGame) {
+      room.addGuest('BOT_SOCKET_ID', 'Computer (Lv.' + room.botDifficulty + ')');
+    }
+
     return room;
   }
 

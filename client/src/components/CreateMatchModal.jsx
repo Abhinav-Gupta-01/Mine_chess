@@ -9,6 +9,8 @@ export default function CreateMatchModal({ onClose, onCreate }) {
   const [pieceColor, setPieceColor] = useState('random');
   const [visibility, setVisibility] = useState('public');
   const [gameMode, setGameMode] = useState('normal');
+  const [opponentType, setOpponentType] = useState('human');
+  const [difficulty, setDifficulty] = useState(2);
   const [customTime, setCustomTime] = useState('');
   const [customIncrement, setCustomIncrement] = useState('');
   const [useCustomTime, setUseCustomTime] = useState(false);
@@ -24,6 +26,8 @@ export default function CreateMatchModal({ onClose, onCreate }) {
       pieceColor,
       visibility,
       gameMode,
+      opponentType,
+      difficulty,
     });
   }
 
@@ -66,6 +70,58 @@ export default function CreateMatchModal({ onClose, onCreate }) {
               </button>
             </div>
           </div>
+
+          {/* Opponent */}
+          <div>
+            <label className="block text-sm font-medium mb-2" style={{ color: 'var(--text-secondary)' }}>Opponent</label>
+            <div className="grid grid-cols-2 gap-2">
+              <button
+                type="button"
+                onClick={() => setOpponentType('human')}
+                className={`p-2 rounded-lg text-sm font-medium border text-center transition-all cursor-pointer ${
+                  opponentType === 'human'
+                    ? 'border-[var(--accent)] bg-[var(--accent-glow)]'
+                    : 'border-[var(--border-color)] bg-[var(--bg-primary)]'
+                }`}
+              >
+                👤 Human
+              </button>
+              <button
+                type="button"
+                onClick={() => setOpponentType('bot')}
+                className={`p-2 rounded-lg text-sm font-medium border text-center transition-all cursor-pointer ${
+                  opponentType === 'bot'
+                    ? 'border-[var(--accent)] bg-[var(--accent-glow)]'
+                    : 'border-[var(--border-color)] bg-[var(--bg-primary)]'
+                }`}
+              >
+                🤖 Computer
+              </button>
+            </div>
+          </div>
+
+          {/* Difficulty (only if bot) */}
+          {opponentType === 'bot' && (
+            <div className="animate-fade-in">
+              <label className="block text-sm font-medium mb-2" style={{ color: 'var(--text-secondary)' }}>Difficulty</label>
+              <div className="grid grid-cols-5 gap-2">
+                {[1, 2, 3, 4, 5].map((lv) => (
+                  <button
+                    key={lv}
+                    type="button"
+                    onClick={() => setDifficulty(lv)}
+                    className={`p-2 rounded-lg text-sm font-medium border text-center transition-all cursor-pointer ${
+                      difficulty === lv
+                        ? 'border-[var(--accent)] bg-[var(--accent-glow)]'
+                        : 'border-[var(--border-color)] bg-[var(--bg-primary)]'
+                    }`}
+                  >
+                    {lv}
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
 
           {/* Time Control */}
           <div>
