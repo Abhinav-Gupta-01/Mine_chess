@@ -24,6 +24,8 @@ export default function Game({ username }) {
   const viewIndexRef = useRef(-1); // Replaced viewIndex if needed, but not touching it
   const endSoundPlayedRef = useRef(false);
   const joinedRef = useRef(false);
+  const [premove, setPremove] = useState(null);
+  const premoveRef = useRef(null);
 
   // History Navigation Keyboard Shortcuts
   useEffect(() => {
@@ -186,6 +188,8 @@ export default function Game({ username }) {
       setMyRematchSent(false);
       setDrawOffer(null);
       setExplosionSquare(null);
+      setPremove(null);
+      premoveRef.current = null;
     }
 
     function onPlayerDisconnected(data) {
@@ -240,6 +244,9 @@ export default function Game({ username }) {
 
   const handleMove = useCallback((from, to, promotion) => {
     if (!gameState || gameState.status !== 'playing') return;
+    // Clear any premove when making a normal move
+    setPremove(null);
+    premoveRef.current = null;
     socket.emit('make_move', {
       code: code.toUpperCase(),
       from, to, promotion,
@@ -249,6 +256,39 @@ export default function Game({ username }) {
       }
     });
   }, [gameState, code]);
+
+  // Premove handler
+  const handleSetPremove = useCallback((pm) => {
+    setPremove(pm);
+    premoveRef.current = pm;
+  }, []);
+
+  // Execute premove when it becomes my turn
+  useEffect(() => {
+    if (!gameState || gameState.status !== 'playing') return;
+    if (!gameState.myColor || gameState.spectator) return;
+
+    const pm = premoveRef.current;
+    if (pm && gameState.turn === gameState.myColor) {
+      // Clear premove first, then attempt it
+      setPremove(null);
+      premoveRef.current = null;
+      // Small delay to let the board render the opponent's move first
+      setTimeout(() => {
+        socket.emit('make_move', {
+          code: code.toUpperCase(),
+          from: pm.from,
+          to: pm.to,
+          promotion: pm.promotion,
+        }, (response) => {
+          if (response.error) {
+            console.error('Premove failed:', response.error);
+            sounds.notify(); // alert player that premove failed
+          }
+        });
+      }, 50);
+    }
+  }, [gameState?.turn, gameState?.status, code]);
 
   const handlePlaceMines = useCallback((squares) => {
     socket.emit('place_mines', {
@@ -452,6 +492,8 @@ export default function Game({ username }) {
             explosionSquare={!isViewingHistory ? explosionSquare : null}
             isSpectator={isSpectator}
             gameStatus={gameState.status}
+            premove={premove}
+            onSetPremove={handleSetPremove}
           />
 
           {/* Bottom player */}

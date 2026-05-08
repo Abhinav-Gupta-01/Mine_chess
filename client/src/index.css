@@ -306,6 +306,21 @@ body {
   background: radial-gradient(circle, #3d2010, #1a1008) !important;
   box-shadow: inset 0 0 8px rgba(255, 80, 0, 0.4);
 }
+.square.premove-highlight {
+  background-color: rgba(0, 140, 255, 0.45) !important;
+}
+.square.premove-target::after {
+  content: '';
+  position: absolute;
+  width: 28%;
+  height: 28%;
+  background: rgba(0, 140, 255, 0.4);
+  border-radius: 50%;
+  pointer-events: none;
+}
+.square.premove-capture {
+  background-image: radial-gradient(transparent 50%, rgba(0, 140, 255, 0.4) 50%);
+}
 
 .piece {
   width: 85%;
