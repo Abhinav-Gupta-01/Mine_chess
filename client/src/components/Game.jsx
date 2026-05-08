@@ -27,29 +27,65 @@ export default function Game({ username }) {
   const [premove, setPremove] = useState(null);
   const premoveRef = useRef(null);
 
-  // History Navigation Keyboard Shortcuts
+  // History navigation functions
+  const navBack = useCallback(() => {
+    if (!gameState || (gameState.status !== 'playing' && gameState.status !== 'finished')) return;
+    if (gameState.moveHistory.length === 0) return;
+    // Cancel premove when navigating away from live position
+    setPremove(null);
+    premoveRef.current = null;
+    setViewIndex((prev) => {
+      const current = prev === -1 ? gameState.moveHistory.length : prev;
+      return Math.max(0, current - 1);
+    });
+  }, [gameState]);
+
+  const navForward = useCallback(() => {
+    if (!gameState || (gameState.status !== 'playing' && gameState.status !== 'finished')) return;
+    if (gameState.moveHistory.length === 0) return;
+    setViewIndex((prev) => {
+      if (prev === -1) return -1;
+      const next = prev + 1;
+      if (next >= gameState.moveHistory.length) return -1;
+      return next;
+    });
+  }, [gameState]);
+
+  const navFirst = useCallback(() => {
+    if (!gameState || (gameState.status !== 'playing' && gameState.status !== 'finished')) return;
+    if (gameState.moveHistory.length === 0) return;
+    setPremove(null);
+    premoveRef.current = null;
+    setViewIndex(0);
+  }, [gameState]);
+
+  const navLast = useCallback(() => {
+    if (!gameState) return;
+    setViewIndex(-1);
+  }, [gameState]);
+
+  // Keyboard shortcuts
   useEffect(() => {
     function handleKeyDown(e) {
-      if (!gameState || (gameState.status !== 'playing' && gameState.status !== 'finished')) return;
-      if (gameState.moveHistory.length === 0) return;
-
-      if (e.key === 'ArrowLeft') {
-        setViewIndex((prev) => {
-          const current = prev === -1 ? gameState.moveHistory.length : prev;
-          return Math.max(0, current - 1);
-        });
-      } else if (e.key === 'ArrowRight') {
-        setViewIndex((prev) => {
-          if (prev === -1) return -1;
-          const next = prev + 1;
-          if (next >= gameState.moveHistory.length) return -1;
-          return next;
-        });
-      }
+      if (e.key === 'ArrowLeft') navBack();
+      else if (e.key === 'ArrowRight') navForward();
     }
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [gameState]);
+  }, [navBack, navForward]);
+
+  // Right-click anywhere cancels premove
+  useEffect(() => {
+    function handleContextMenu(e) {
+      if (premoveRef.current) {
+        e.preventDefault();
+        setPremove(null);
+        premoveRef.current = null;
+      }
+    }
+    window.addEventListener('contextmenu', handleContextMenu);
+    return () => window.removeEventListener('contextmenu', handleContextMenu);
+  }, []);
 
   // Handle game over sounds
   useEffect(() => {
@@ -495,6 +531,24 @@ export default function Game({ username }) {
             premove={premove}
             onSetPremove={handleSetPremove}
           />
+
+          {/* Move navigation buttons */}
+          {(gameState.status === 'playing' || gameState.status === 'finished') && gameState.moveHistory.length > 0 && (
+            <div className="move-nav-bar">
+              <button onClick={navFirst} className="move-nav-btn" title="First move">
+                <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor"><path d="M4 3v10h1.5V3H4zm8.5 5L7 3v10l5.5-5z"/></svg>
+              </button>
+              <button onClick={navBack} className="move-nav-btn" title="Previous move">
+                <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor"><path d="M10.5 3L5 8l5.5 5V3z"/></svg>
+              </button>
+              <button onClick={navForward} className="move-nav-btn" title="Next move">
+                <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor"><path d="M5.5 3v10L11 8 5.5 3z"/></svg>
+              </button>
+              <button onClick={navLast} className="move-nav-btn" title="Last move (live)">
+                <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor"><path d="M3.5 3L9 8l-5.5 5V3zm7 0v10H12V3h-1.5z"/></svg>
+              </button>
+            </div>
+          )}
 
           {/* Bottom player */}
           <PlayerPanel

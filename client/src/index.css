@@ -480,6 +480,35 @@ body {
   background-color: rgba(255, 165, 0, 0.15) !important;
 }
 
+/* ===== MOVE NAVIGATION BAR ===== */
+.move-nav-bar {
+  display: flex;
+  justify-content: center;
+  gap: 0.25rem;
+  padding: 0.35rem 0;
+}
+.move-nav-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 2.5rem;
+  height: 1.75rem;
+  background: var(--bg-elevated);
+  border: 1px solid var(--border-color);
+  border-radius: 0.35rem;
+  color: var(--text-secondary);
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+.move-nav-btn:hover {
+  background: var(--border-color);
+  color: var(--text-primary);
+}
+.move-nav-btn:active {
+  transform: scale(0.95);
+  background: var(--accent-glow);
+}
+
 /* ===== RESPONSIVE ===== */
 @media (max-width: 768px) {
   .clock {
