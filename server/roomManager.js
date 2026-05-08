@@ -108,7 +108,10 @@ class Room {
       setTimeout(async () => {
         if (this.status !== 'playing' || this.chess.turn() !== this.guest.color) return;
         
-        const move = await this.ai.getBestMove(this.chess, this.mines);
+        // Only pass the bot's own mines — don't reveal opponent's mine positions
+        const botColor = this.guest.color;
+        const sanitizedMines = { w: [], b: [], [botColor]: this.mines[botColor] };
+        const move = await this.ai.getBestMove(this.chess, sanitizedMines);
         if (move) {
           this._botRequestMove(move);
         }
@@ -406,6 +409,12 @@ class Room {
     const player = this.getPlayerBySocket(socketId);
     if (!player) return null;
     this.rematchRequests[player.color] = true;
+
+    // Bot auto-accepts rematch
+    if (this.isBotGame) {
+      this.rematchRequests[this.guest.color] = true;
+    }
+
     if (this.rematchRequests.w && this.rematchRequests.b) {
       return { accepted: true };
     }
@@ -437,6 +446,11 @@ class Room {
     } else {
       this.status = 'playing';
       this.startClock();
+    }
+
+    // Bot needs to re-place mines and/or be ready to move
+    if (this.isBotGame) {
+      this._checkBotTurn();
     }
   }
 
