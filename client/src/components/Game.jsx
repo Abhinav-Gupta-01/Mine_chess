@@ -258,6 +258,12 @@ export default function Game({ username }) {
       if (response.error) {
         setError(response.error);
         setTimeout(() => setError(''), 3000);
+      } else {
+        // Update local state so the player transitions to "waiting for opponent" screen
+        setGameState((prev) => {
+          if (!prev) return prev;
+          return { ...prev, myMinesPlaced: true, myMines: squares };
+        });
       }
     });
   }, [code]);

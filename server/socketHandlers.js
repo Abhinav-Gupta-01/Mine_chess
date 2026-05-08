@@ -109,18 +109,21 @@ function setupSocketHandlers(io, roomManager) {
 
       callback({ success: true });
 
-      const player = room.getPlayerBySocket(socket.id);
+      // Send updated state to the player who just placed
+      socket.emit('your_state', room.getState(socket.id));
 
       // Notify opponent that mines are placed (without revealing positions)
       const opponent = room.getOpponent(socket.id);
-      if (opponent) {
+      if (opponent && opponent.socketId !== 'BOT_SOCKET_ID') {
         io.to(opponent.socketId).emit('opponent_mines_placed');
       }
 
       if (result.started) {
-        // Both placed, game starts
+        // Both placed, game starts — send fresh state to both
         io.to(room.host.socketId).emit('your_state', room.getState(room.host.socketId));
-        io.to(room.guest.socketId).emit('your_state', room.getState(room.guest.socketId));
+        if (room.guest.socketId !== 'BOT_SOCKET_ID') {
+          io.to(room.guest.socketId).emit('your_state', room.getState(room.guest.socketId));
+        }
         io.to(room.code).emit('game_started');
         startClockBroadcast(io, room);
       }
@@ -216,7 +219,6 @@ function setupSocketHandlers(io, roomManager) {
       io.to(room.code).emit('game_over', result);
     });
 
-    // ---- Rematch ----
     socket.on('request_rematch', ({ code }, callback) => {
       const room = roomManager.getRoom(code);
       if (!room) return callback({ error: 'Room not found' });
@@ -229,7 +231,9 @@ function setupSocketHandlers(io, roomManager) {
       if (result.accepted) {
         room.resetForRematch();
         io.to(room.host.socketId).emit('your_state', room.getState(room.host.socketId));
-        io.to(room.guest.socketId).emit('your_state', room.getState(room.guest.socketId));
+        if (room.guest.socketId !== 'BOT_SOCKET_ID') {
+          io.to(room.guest.socketId).emit('your_state', room.getState(room.guest.socketId));
+        }
         io.to(room.code).emit('rematch_started');
 
         if (room.status === 'playing') {
@@ -237,7 +241,7 @@ function setupSocketHandlers(io, roomManager) {
         }
       } else {
         const opponent = room.getOpponent(socket.id);
-        if (opponent) {
+        if (opponent && opponent.socketId !== 'BOT_SOCKET_ID') {
           io.to(opponent.socketId).emit('rematch_requested', {
             by: room.getPlayerBySocket(socket.id).color,
           });
