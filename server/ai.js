@@ -67,6 +67,24 @@ class ChessAI {
       const fen = chess.fen();
       const myColor = chess.turn();
 
+      // For lower ELOs, introduce a chance to play a completely random move
+      // Random probability: 500 ELO ~ 66%, 800 ELO ~ 46%, 1200 ELO ~ 20%, >=1500 ELO ~ 0%
+      const randomChance = Math.max(0, 1 - (this.elo / 1500));
+      if (Math.random() < randomChance) {
+        const allMoves = chess.moves({ verbose: true });
+        // In landmine mode, filter out moves that step on our own mines
+        let safeMoves = allMoves;
+        if (this.isLandmine) {
+          safeMoves = allMoves.filter(m => !roomMines[myColor].includes(m.to));
+        }
+
+        if (safeMoves.length > 0) {
+          const randomMove = safeMoves[Math.floor(Math.random() * safeMoves.length)];
+          console.log(`[ChessAI] ELO=${this.elo} playing a RANDOM move (chance was ${Math.round(randomChance * 100)}%)`);
+          return resolve(randomMove);
+        }
+      }
+
       let searchMovesCmd = '';
       if (this.isLandmine) {
         const allMoves = chess.moves({ verbose: true });

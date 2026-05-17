@@ -4,13 +4,11 @@ const TIME_PRESETS = [1, 2, 3, 5, 10, 15, 30];
 const INCREMENT_PRESETS = [0, 1, 2, 3, 5, 10];
 
 const ELO_PRESETS = [
-  { elo: 400,  label: 'Beginner',  emoji: '🟢' },
+  { elo: 500,  label: 'Beginner',  emoji: '🟢' },
   { elo: 800,  label: 'Casual',    emoji: '🟡' },
   { elo: 1200, label: 'Club',      emoji: '🟠' },
-  { elo: 1500, label: 'Strong',    emoji: '🔴' },
-  { elo: 1800, label: 'Advanced',  emoji: '🟣' },
-  { elo: 2000, label: 'Expert',    emoji: '💎' },
-  { elo: 2500, label: 'Master',    emoji: '👑' },
+  { elo: 1600, label: 'Advanced',  emoji: '🔴' },
+  { elo: 2000, label: 'Expert',    emoji: '👑' },
 ];
 
 export default function CreateMatchModal({ onClose, onCreate }) {
@@ -21,27 +19,10 @@ export default function CreateMatchModal({ onClose, onCreate }) {
   const [gameMode, setGameMode] = useState('normal');
   const [opponentType, setOpponentType] = useState('human');
   const [elo, setElo] = useState(800);
-  const [customElo, setCustomElo] = useState('');
-  const [useCustomElo, setUseCustomElo] = useState(false);
   const [customTime, setCustomTime] = useState('');
   const [customIncrement, setCustomIncrement] = useState('');
   const [useCustomTime, setUseCustomTime] = useState(false);
   const [useCustomIncrement, setUseCustomIncrement] = useState(false);
-
-  const activeElo = useCustomElo ? Math.max(200, Math.min(3200, parseInt(customElo) || 800)) : elo;
-
-  // Compute gauge position (0-100%)
-  const gaugePercent = Math.min(100, Math.max(0, ((activeElo - 200) / (3200 - 200)) * 100));
-
-  function getEloColor(eloVal) {
-    if (eloVal <= 400) return '#22c55e';
-    if (eloVal <= 800) return '#eab308';
-    if (eloVal <= 1200) return '#f97316';
-    if (eloVal <= 1500) return '#ef4444';
-    if (eloVal <= 1800) return '#a855f7';
-    if (eloVal <= 2200) return '#3b82f6';
-    return '#fbbf24';
-  }
 
   function handleSubmit(e) {
     e.preventDefault();
@@ -54,7 +35,7 @@ export default function CreateMatchModal({ onClose, onCreate }) {
       visibility,
       gameMode,
       opponentType,
-      elo: activeElo,
+      elo,
     });
   }
 
@@ -130,64 +111,24 @@ export default function CreateMatchModal({ onClose, onCreate }) {
           {/* ELO Selector (only if bot) */}
           {opponentType === 'bot' && (
             <div className="animate-fade-in">
-              <label className="block text-sm font-medium mb-2" style={{ color: 'var(--text-secondary)' }}>
-                Bot Strength — <span style={{ color: getEloColor(activeElo), fontWeight: 700 }}>{activeElo} ELO</span>
-              </label>
-
-              {/* ELO Preset Buttons */}
-              <div className="flex flex-wrap gap-2 mb-3">
+              <label className="block text-sm font-medium mb-2" style={{ color: 'var(--text-secondary)' }}>Bot Strength</label>
+              <div className="grid grid-cols-5 gap-2">
                 {ELO_PRESETS.map((preset) => (
                   <button
                     key={preset.elo}
                     type="button"
-                    onClick={() => { setElo(preset.elo); setUseCustomElo(false); }}
-                    className={`px-3 py-1.5 rounded-lg text-xs font-medium border text-center transition-all cursor-pointer ${
-                      !useCustomElo && elo === preset.elo
+                    onClick={() => setElo(preset.elo)}
+                    className={`p-2 rounded-lg text-xs font-medium border text-center transition-all cursor-pointer ${
+                      elo === preset.elo
                         ? 'border-[var(--accent)] bg-[var(--accent-glow)] text-white'
                         : 'border-[var(--border-color)] bg-[var(--bg-primary)]'
                     }`}
-                    title={`${preset.label} (~${preset.elo} ELO)`}
+                    title={preset.label}
                   >
-                    {preset.emoji} {preset.elo}
+                    <div>{preset.emoji}</div>
+                    <div>{preset.elo}</div>
                   </button>
                 ))}
-                <input
-                  type="number"
-                  className="input w-20 text-center text-sm"
-                  placeholder="Custom"
-                  value={customElo}
-                  onChange={(e) => { setCustomElo(e.target.value); setUseCustomElo(true); }}
-                  onFocus={() => setUseCustomElo(true)}
-                  min={200}
-                  max={3200}
-                />
-              </div>
-
-              {/* ELO Gauge Bar */}
-              <div style={{
-                position: 'relative',
-                height: '6px',
-                borderRadius: '3px',
-                background: 'linear-gradient(to right, #22c55e, #eab308, #f97316, #ef4444, #a855f7, #3b82f6, #fbbf24)',
-                overflow: 'visible',
-              }}>
-                <div style={{
-                  position: 'absolute',
-                  left: `${gaugePercent}%`,
-                  top: '50%',
-                  transform: 'translate(-50%, -50%)',
-                  width: '14px',
-                  height: '14px',
-                  borderRadius: '50%',
-                  background: getEloColor(activeElo),
-                  border: '2px solid white',
-                  boxShadow: `0 0 8px ${getEloColor(activeElo)}`,
-                  transition: 'left 0.3s ease, background 0.3s ease, box-shadow 0.3s ease',
-                }} />
-              </div>
-              <div className="flex justify-between mt-1" style={{ fontSize: '10px', color: 'var(--text-secondary)' }}>
-                <span>200</span>
-                <span>3200</span>
               </div>
             </div>
           )}
