@@ -26,6 +26,7 @@ export default function Game({ username }) {
   const joinedRef = useRef(false);
   const [premove, setPremove] = useState(null);
   const premoveRef = useRef(null);
+  const myColorRef = useRef(null);
 
   // History navigation functions
   const navBack = useCallback(() => {
@@ -151,6 +152,7 @@ export default function Game({ username }) {
       if (state.status === 'playing' || state.status === 'mine_placement') {
         sounds.stopAll();
       }
+      myColorRef.current = state.myColor;
       setGameState(state);
       setConnecting(false);
     }
@@ -179,7 +181,9 @@ export default function Game({ username }) {
         setTimeout(() => setExplosionSquare(null), 800);
       } else if (!data.gameOver) {
         if (data.isCheck) {
-          sounds.check();
+          if (!myColorRef.current || data.turn === myColorRef.current) {
+            sounds.check();
+          }
         } else if (data.move.captured === 'q') {
           sounds.captureQueen();
         } else if (data.move.captured) {
