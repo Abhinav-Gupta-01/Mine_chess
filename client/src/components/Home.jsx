@@ -47,7 +47,7 @@ export default function Home({ username }) {
         setError(response.error);
         return;
       }
-      
+
       if (settings.opponentType === 'bot') {
         navigate(`/game/${response.code}`);
       } else {
@@ -98,7 +98,7 @@ export default function Home({ username }) {
   if (waitingRoom) {
     return (
       <div className="min-h-screen flex items-center justify-center p-4"
-           style={{ background: 'linear-gradient(135deg, #0f0f13 0%, #1a1a2e 50%, #16213e 100%)' }}>
+        style={{ background: 'linear-gradient(135deg, #0f0f13 0%, #1a1a2e 50%, #16213e 100%)' }}>
         <div className="animate-slide-up glass rounded-2xl p-8 max-w-md w-full text-center">
           <div className="text-4xl mb-4 animate-float">♟️</div>
           <h2 className="text-2xl font-bold mb-2">Waiting for Opponent</h2>
@@ -111,7 +111,7 @@ export default function Home({ username }) {
             <p className="text-xs mb-2 font-medium" style={{ color: 'var(--text-muted)' }}>ROOM CODE</p>
             <div className="flex items-center justify-center gap-3">
               <span className="text-3xl font-bold tracking-[0.3em]"
-                    style={{ fontFamily: "'JetBrains Mono', monospace", color: 'var(--accent)' }}>
+                style={{ fontFamily: "'JetBrains Mono', monospace", color: 'var(--accent)' }}>
                 {waitingRoom}
               </span>
               <button onClick={copyRoomCode} className="btn-secondary text-xs py-1 px-3">
@@ -128,7 +128,7 @@ export default function Home({ username }) {
           {/* Loading spinner */}
           <div className="flex items-center justify-center gap-2 mb-4" style={{ color: 'var(--text-secondary)' }}>
             <div className="w-4 h-4 border-2 border-current border-t-transparent rounded-full"
-                 style={{ animation: 'spin-slow 1s linear infinite' }}></div>
+              style={{ animation: 'spin-slow 1s linear infinite' }}></div>
             <span className="text-sm">Searching for opponent...</span>
           </div>
 
@@ -141,15 +141,15 @@ export default function Home({ username }) {
   }
 
   return (
-    <div className="min-h-screen p-4"
-         style={{ background: 'linear-gradient(135deg, #0f0f13 0%, #1a1a2e 50%, #16213e 100%)' }}>
-      <div className="max-w-4xl mx-auto">
+    <div className="min-h-screen flex items-center justify-center p-4"
+      style={{ background: 'linear-gradient(135deg, #0f0f13 0%, #1a1a2e 50%, #16213e 100%)' }}>
+      <div className="w-full max-w-4xl mx-auto">
 
         {/* Header */}
         <header className="text-center py-8 animate-fade-in">
           <div className="text-5xl mb-3 animate-float">♔</div>
           <h1 className="text-4xl font-extrabold tracking-tight mb-1"
-              style={{ background: 'linear-gradient(135deg, #6366f1, #a78bfa, #818cf8)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>
+            style={{ background: 'linear-gradient(135deg, #6366f1, #a78bfa, #818cf8)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>
             ChessArena
           </h1>
           <p style={{ color: 'var(--text-secondary)' }}>
@@ -160,7 +160,7 @@ export default function Home({ username }) {
         {/* Error */}
         {error && (
           <div className="max-w-lg mx-auto mb-4 p-3 rounded-lg text-center text-sm animate-shake"
-               style={{ background: 'rgba(239, 68, 68, 0.15)', border: '1px solid rgba(239, 68, 68, 0.3)', color: '#f87171' }}>
+            style={{ background: 'rgba(239, 68, 68, 0.15)', border: '1px solid rgba(239, 68, 68, 0.3)', color: '#f87171' }}>
             {error}
             <button onClick={() => setError('')} className="ml-3 opacity-60 hover:opacity-100">✕</button>
           </div>
@@ -220,7 +220,7 @@ export default function Home({ username }) {
             <div className="space-y-2">
               {publicRooms.map((room) => (
                 <div key={room.code}
-                     className="glass rounded-xl p-4 flex items-center justify-between transition-all hover:border-[var(--accent)]">
+                  className="glass rounded-xl p-4 flex items-center justify-between transition-all hover:border-[var(--accent)]">
                   <div className="flex items-center gap-4">
                     <span className="text-2xl">{room.gameMode === 'landmine' ? '💣' : '♟️'}</span>
                     <div>

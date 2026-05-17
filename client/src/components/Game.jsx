@@ -475,12 +475,12 @@ export default function Game({ username }) {
   const bottomPlayer = gameState.players[bottomColor];
 
   return (
-    <div className="min-h-screen p-2 md:p-4"
+    <div className="min-h-screen flex flex-col items-center justify-center p-2 md:p-4"
          style={{ background: 'linear-gradient(135deg, #0f0f13 0%, #1a1a2e 50%, #16213e 100%)' }}>
 
       {/* Disconnection banner */}
       {disconnectedPlayer && (
-        <div className="max-w-4xl mx-auto mb-2 p-3 rounded-lg text-center text-sm animate-shake"
+        <div className="w-full max-w-4xl mx-auto mb-2 p-3 rounded-lg text-center text-sm animate-shake"
              style={{ background: 'rgba(245, 158, 11, 0.15)', border: '1px solid rgba(245, 158, 11, 0.3)', color: '#fbbf24' }}>
           ⚠️ {disconnectedPlayer.username} disconnected. Auto-forfeit in 60s if they don't return.
         </div>
@@ -488,7 +488,7 @@ export default function Game({ username }) {
 
       {/* Draw offer banner */}
       {drawOffer && drawOffer !== myColor && (
-        <div className="max-w-4xl mx-auto mb-2 p-3 rounded-lg text-center text-sm animate-fade-in flex items-center justify-center gap-3"
+        <div className="w-full max-w-4xl mx-auto mb-2 p-3 rounded-lg text-center text-sm animate-fade-in flex items-center justify-center gap-3"
              style={{ background: 'rgba(99, 102, 241, 0.15)', border: '1px solid rgba(99, 102, 241, 0.3)' }}>
           <span>🤝 Opponent offers a draw</span>
           <button onClick={handleAcceptDraw} className="btn-success text-xs py-1 px-3">Accept</button>
@@ -498,7 +498,7 @@ export default function Game({ username }) {
 
       {/* Error banner */}
       {error && (
-        <div className="max-w-4xl mx-auto mb-2 p-2 rounded-lg text-center text-xs"
+        <div className="w-full max-w-4xl mx-auto mb-2 p-2 rounded-lg text-center text-xs"
              style={{ background: 'rgba(239, 68, 68, 0.15)', color: '#f87171' }}>
           {error}
         </div>
