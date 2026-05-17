@@ -53,8 +53,8 @@ class Room {
 
     // Bot properties
     this.isBotGame = settings.opponentType === 'bot';
-    this.botDifficulty = parseInt(settings.difficulty) || 1;
-    this.ai = this.isBotGame ? new ChessAI(this.botDifficulty, settings.gameMode === 'landmine') : null;
+    this.botElo = parseInt(settings.elo) || 1200;
+    this.ai = this.isBotGame ? new ChessAI(this.botElo, settings.gameMode === 'landmine') : null;
 
     // Assign colors
     this._assignColors();
@@ -522,7 +522,7 @@ class RoomManager {
 
     // If it's a bot game, add the guest immediately
     if (room.isBotGame) {
-      room.addGuest('BOT_SOCKET_ID', 'Computer (Lv.' + room.botDifficulty + ')');
+      room.addGuest('BOT_SOCKET_ID', 'Computer (~' + room.botElo + ' ELO)');
     }
 
     return room;

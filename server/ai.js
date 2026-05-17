@@ -1,17 +1,30 @@
 const stockfish = require('stockfish');
 
 class ChessAI {
-  constructor(difficulty = 3, isLandmine = false) {
-    this.difficulty = parseInt(difficulty) || 3;
+  constructor(elo = 1200, isLandmine = false) {
+    this.elo = Math.max(200, Math.min(3200, parseInt(elo) || 1200));
     this.isLandmine = isLandmine;
     this.engine = null;
     this.isReady = false;
 
-    // Mapping difficulty (1-5) to Stockfish Skill Level (0-20)
-    this.skillLevel = Math.max(0, Math.min(20, (this.difficulty - 1) * 5));
-    
-    // Search depth mapping
-    this.depth = [1, 5, 10, 15, 20][this.difficulty - 1] || 10;
+    // Map ELO to Stockfish Skill Level (0–20), linearly across ELO 200–2500
+    this.skillLevel = Math.round(
+      Math.min(20, Math.max(0, ((this.elo - 200) / (2500 - 200)) * 20))
+    );
+
+    // Map ELO to search depth (1–20), linearly across ELO 200–2500+
+    this.depth = Math.round(
+      Math.min(20, Math.max(1, 1 + ((this.elo - 200) / (2500 - 200)) * 19))
+    );
+
+    // Map ELO to move time (ms): exponential curve from 50ms to 5000ms
+    this.moveTime = Math.round(
+      50 * Math.pow(100, (this.elo - 200) / (3200 - 200))
+    );
+
+    console.log(
+      `[ChessAI] ELO=${this.elo} → Skill=${this.skillLevel}, Depth=${this.depth}, MoveTime=${this.moveTime}ms`
+    );
 
     // Initialize engine asynchronously
     this.initPromise = this.init();
@@ -20,7 +33,7 @@ class ChessAI {
   async init() {
     // Using 'lite-single' for better compatibility in server environments
     this.engine = await stockfish('lite-single');
-    
+
     this.engine.listener = (line) => {
       if (line === 'readyok') {
         this.isReady = true;
@@ -31,7 +44,19 @@ class ChessAI {
     };
 
     this.engine.sendCommand('uci');
+
+    // Set Skill Level (always supported)
     this.engine.sendCommand(`setoption name Skill Level value ${this.skillLevel}`);
+
+    // Attempt native ELO limiting (may not be supported in all Stockfish builds)
+    try {
+      this.engine.sendCommand('setoption name UCI_LimitStrength value true');
+      this.engine.sendCommand(`setoption name UCI_Elo value ${this.elo}`);
+    } catch (e) {
+      // Not supported in this build — Skill Level alone will handle it
+      console.log('[ChessAI] UCI_LimitStrength not supported, using Skill Level only');
+    }
+
     this.engine.sendCommand('isready');
   }
 
@@ -41,12 +66,12 @@ class ChessAI {
     return new Promise((resolve) => {
       const fen = chess.fen();
       const myColor = chess.turn();
-      
+
       let searchMovesCmd = '';
       if (this.isLandmine) {
         const allMoves = chess.moves({ verbose: true });
         const safeMoves = allMoves.filter(m => !roomMines[myColor].includes(m.to));
-        
+
         if (safeMoves.length > 0) {
           const moveList = safeMoves.map(m => m.from + m.to + (m.promotion || '')).join(' ');
           searchMovesCmd = ` searchmoves ${moveList}`;
@@ -57,15 +82,15 @@ class ChessAI {
         if (line.startsWith('bestmove')) {
           const parts = line.split(' ');
           const bestMoveUCI = parts[1];
-          
+
           if (bestMoveUCI === '(none)') {
             resolve(null);
           } else {
             const from = bestMoveUCI.substring(0, 2);
             const to = bestMoveUCI.substring(2, 4);
             const promotion = bestMoveUCI.length > 4 ? bestMoveUCI.substring(4, 5) : null;
-            
-            const move = chess.moves({ verbose: true }).find(m => 
+
+            const move = chess.moves({ verbose: true }).find(m =>
               m.from === from && m.to === to && (!promotion || m.promotion === promotion)
             );
             resolve(move || null);
@@ -75,7 +100,7 @@ class ChessAI {
       };
 
       this.engine.sendCommand(`position fen ${fen}`);
-      this.engine.sendCommand(`go depth ${this.depth}${searchMovesCmd}`);
+      this.engine.sendCommand(`go depth ${this.depth} movetime ${this.moveTime}${searchMovesCmd}`);
     });
   }
 
@@ -83,7 +108,7 @@ class ChessAI {
     const validRows = color === 'w' ? ['3', '4'] : ['5', '6'];
     const squares = [];
     const files = ['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h'];
-    
+
     while (squares.length < 3) {
       const row = validRows[Math.floor(Math.random() * validRows.length)];
       const file = files[Math.floor(Math.random() * files.length)];
