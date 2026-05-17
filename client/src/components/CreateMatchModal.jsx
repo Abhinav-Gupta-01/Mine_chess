@@ -225,33 +225,35 @@ export default function CreateMatchModal({ onClose, onCreate }) {
           </div>
 
           {/* Visibility */}
-          <div>
-            <label className="block text-sm font-medium mb-2" style={{ color: 'var(--text-secondary)' }}>Visibility</label>
-            <div className="grid grid-cols-2 gap-2">
-              <button
-                type="button"
-                onClick={() => setVisibility('public')}
-                className={`p-2 rounded-lg text-sm font-medium border text-center transition-all cursor-pointer ${
-                  visibility === 'public'
-                    ? 'border-[var(--accent)] bg-[var(--accent-glow)]'
-                    : 'border-[var(--border-color)] bg-[var(--bg-primary)]'
-                }`}
-              >
-                🌐 Public
-              </button>
-              <button
-                type="button"
-                onClick={() => setVisibility('private')}
-                className={`p-2 rounded-lg text-sm font-medium border text-center transition-all cursor-pointer ${
-                  visibility === 'private'
-                    ? 'border-[var(--accent)] bg-[var(--accent-glow)]'
-                    : 'border-[var(--border-color)] bg-[var(--bg-primary)]'
-                }`}
-              >
-                🔒 Private
-              </button>
+          {opponentType !== 'bot' && (
+            <div>
+              <label className="block text-sm font-medium mb-2" style={{ color: 'var(--text-secondary)' }}>Visibility</label>
+              <div className="grid grid-cols-2 gap-2">
+                <button
+                  type="button"
+                  onClick={() => setVisibility('public')}
+                  className={`p-2 rounded-lg text-sm font-medium border text-center transition-all cursor-pointer ${
+                    visibility === 'public'
+                      ? 'border-[var(--accent)] bg-[var(--accent-glow)]'
+                      : 'border-[var(--border-color)] bg-[var(--bg-primary)]'
+                  }`}
+                >
+                  🌐 Public
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setVisibility('private')}
+                  className={`p-2 rounded-lg text-sm font-medium border text-center transition-all cursor-pointer ${
+                    visibility === 'private'
+                      ? 'border-[var(--accent)] bg-[var(--accent-glow)]'
+                      : 'border-[var(--border-color)] bg-[var(--bg-primary)]'
+                  }`}
+                >
+                  🔒 Private
+                </button>
+              </div>
             </div>
-          </div>
+          )}
 
           {/* Submit */}
           <button type="submit" className="btn-primary w-full text-lg py-3">
