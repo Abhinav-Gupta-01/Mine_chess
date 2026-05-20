@@ -436,7 +436,7 @@ export default function Game({ username }) {
   // Mine placement phase
   if (gameState.status === 'mine_placement' && !isSpectator && !gameState.myMinesPlaced) {
     return (
-      <div className="min-h-screen p-4"
+      <div className="min-h-screen flex items-center justify-center p-4"
            style={{ background: 'linear-gradient(135deg, #0f0f13 0%, #1a1a2e 50%, #16213e 100%)' }}>
         <MinePlacement
           myColor={myColor}

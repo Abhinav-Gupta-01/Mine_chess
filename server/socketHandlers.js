@@ -249,6 +249,17 @@ function setupSocketHandlers(io, roomManager) {
       }
     });
 
+    // ---- Cancel Room ----
+    socket.on('cancel_room', ({ code }, callback) => {
+      const room = roomManager.getRoom(code);
+      if (room && room.host.socketId === socket.id && room.status === 'waiting') {
+        roomManager.removeRoom(code);
+        if (typeof callback === 'function') callback({ success: true });
+      } else {
+        if (typeof callback === 'function') callback({ error: 'Cannot cancel room' });
+      }
+    });
+
     // ---- Disconnect ----
     socket.on('disconnect', () => {
       console.log(`Client disconnected: ${socket.id}`);

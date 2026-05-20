@@ -79,6 +79,11 @@ export default function Home({ username }) {
   }
 
   function cancelWaiting() {
+    if (waitingRoom) {
+      socket.emit('cancel_room', { code: waitingRoom }, () => {
+        fetchPublicRooms();
+      });
+    }
     setWaitingRoom(null);
   }
 
